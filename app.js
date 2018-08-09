@@ -1,3 +1,13 @@
+$('#btn__clearUploadedImage').on('click', () => {
+    $.ajax({
+        url: 'server/clearUploadedImage.php',
+        method: 'POST',
+    }).done(() => {
+        $('.img__cropped').remove();
+    });
+});
+
+let cropper;
 const previewFile = () => {
     let file = document.querySelector('input[type=file]').files[0];
     let preview = document.getElementById('image');
@@ -5,19 +15,23 @@ const previewFile = () => {
     let fileReader = new FileReader();
     fileReader.addEventListener('load', () => {
         preview.src = fileReader.result;
-        initCropper();
+
+        let img = new 
+
+        cropper = initCropper();
     }, false);
     fileReader.readAsDataURL(file);
 };
 
-let cropper;
 const initCropper = () => {
-    cropper = new Cropper(document.getElementById('image'), {
+    if (cropper) {
+        cropper.destroy();
+    }
+
+    return new Cropper(document.getElementById('image'), {
         viewMode: 2,
         aspectRatio: 1,
     });
-
-    return cropper;
 };
 
 $('#btn__getData').on('click', () => {
@@ -30,13 +44,13 @@ $('#btn__getCanvasData').on('click', () => {
 
 $('#btn__getCroppedCanvas').on('click', () => {
     let dataUrl = cropper.getCroppedCanvas().toDataURL();
-    $(`<img src="${dataUrl}">`).appendTo($('body'));
+    $(`<img src="${dataUrl}" class="img__cropped">`).appendTo($('body'));
     cropper.getCroppedCanvas().toBlob((blob) => {
         const formData = new FormData();
         formData.append('croppedImage', blob);
 
         $.ajax({
-            url: 'http://localhost/test/cropper/',
+            url: 'server/uploadImage.php',
             method: 'POST',
             data: formData,
             processData: false,
