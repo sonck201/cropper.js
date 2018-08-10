@@ -13,12 +13,21 @@ const previewFile = () => {
     let preview = document.getElementById('image');
 
     let fileReader = new FileReader();
-    fileReader.addEventListener('load', () => {
-        preview.src = fileReader.result;
+    fileReader.addEventListener('load', async () => {
+        let img = new Image();
+        img.src = fileReader.result;
 
-        let img = new 
+        await img.addEventListener('load', () => {
+            preview.src = fileReader.result;
 
-        cropper = initCropper();
+            cropper = initCropper();
+        });
+
+        if (img.width === 0 || img.height === 0) {
+            console.error('Not valid image');
+        } else {
+            console.log(img.width, img.height);
+        }
     }, false);
     fileReader.readAsDataURL(file);
 };
