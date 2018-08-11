@@ -1,23 +1,46 @@
+$('#btn__clearUploadedImage').on('click', () => {
+    $.ajax({
+        url: 'server/clearUploadedImage.php',
+        method: 'POST',
+    }).done(() => {
+        $('.img__cropped').remove();
+    });
+});
+
+let cropper;
 const previewFile = () => {
     let file = document.querySelector('input[type=file]').files[0];
     let preview = document.getElementById('image');
 
     let fileReader = new FileReader();
-    fileReader.addEventListener('load', () => {
-        preview.src = fileReader.result;
-        initCropper();
+    fileReader.addEventListener('load', async () => {
+        let img = new Image();
+        img.src = fileReader.result;
+
+        await img.addEventListener('load', () => {
+            preview.src = fileReader.result;
+
+            cropper = initCropper();
+        });
+
+        if (img.width === 0 || img.height === 0) {
+            console.error('Not valid image');
+        } else {
+            console.log(img.width, img.height);
+        }
     }, false);
     fileReader.readAsDataURL(file);
 };
 
-let cropper;
 const initCropper = () => {
-    cropper = new Cropper(document.getElementById('image'), {
+    if (cropper) {
+        cropper.destroy();
+    }
+
+    return new Cropper(document.getElementById('image'), {
         viewMode: 2,
         aspectRatio: 1,
     });
-
-    return cropper;
 };
 
 $('#btn__getData').on('click', () => {
@@ -29,22 +52,40 @@ $('#btn__getCanvasData').on('click', () => {
 });
 
 $('#btn__getCroppedCanvas').on('click', () => {
-    let dataUrl = cropper.getCroppedCanvas().toDataURL();
-    $(`<img src="${dataUrl}">`).appendTo($('body'));
-    cropper.getCroppedCanvas().toBlob((blob) => {
+    let cropperCanvasOption = {
+        width: 800,
+        height: 800,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        fillColor: '#fff',
+    };
+
+    let dataUrl = cropper.getCroppedCanvas(cropperCanvasOption).toDataURL('image/jpeg');
+    $(`<img src="${dataUrl}" class="img__cropped">`).appendTo($('body'));
+    $.ajax({
+        url: 'server/uploadImage.php',
+        method: 'POST',
+        data: {image: dataUrl},
+    }).done(() => {
+        console.log('Success DataUrl');
+    }).fail(() => {
+        console.log('Error DataUrl');
+    });
+
+    cropper.getCroppedCanvas(cropperCanvasOption).toBlob((blob) => {
         const formData = new FormData();
         formData.append('croppedImage', blob);
 
         $.ajax({
-            url: 'http://localhost/test/cropper/',
+            url: 'server/uploadImageBlob.php',
             method: 'POST',
             data: formData,
             processData: false,
             contentType: false,
         }).done(() => {
-            console.log('Success');
+            console.log('Success Blob');
         }).fail(() => {
-            console.log('Error');
+            console.log('Error Blob');
         });
-    });
+    }, 'image/jpeg');
 });
