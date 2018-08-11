@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="node_modules/cropperjs/dist/cropper.min.css">
     <link rel="stylesheet" href="app.css">
-    <base href="http://localhost/test/cropper/">
+    <base href="http://localhost<?= $_SERVER['REQUEST_URI']?>">
 </head>
 <body>
 
