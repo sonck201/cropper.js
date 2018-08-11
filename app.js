@@ -52,22 +52,40 @@ $('#btn__getCanvasData').on('click', () => {
 });
 
 $('#btn__getCroppedCanvas').on('click', () => {
-    let dataUrl = cropper.getCroppedCanvas().toDataURL();
+    let cropperCanvasOption = {
+        width: 800,
+        height: 800,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        fillColor: '#fff',
+    };
+
+    let dataUrl = cropper.getCroppedCanvas(cropperCanvasOption).toDataURL('image/jpeg');
     $(`<img src="${dataUrl}" class="img__cropped">`).appendTo($('body'));
-    cropper.getCroppedCanvas().toBlob((blob) => {
+    $.ajax({
+        url: 'server/uploadImage.php',
+        method: 'POST',
+        data: {image: dataUrl},
+    }).done(() => {
+        console.log('Success DataUrl');
+    }).fail(() => {
+        console.log('Error DataUrl');
+    });
+
+    cropper.getCroppedCanvas(cropperCanvasOption).toBlob((blob) => {
         const formData = new FormData();
         formData.append('croppedImage', blob);
 
         $.ajax({
-            url: 'server/uploadImage.php',
+            url: 'server/uploadImageBlob.php',
             method: 'POST',
             data: formData,
             processData: false,
             contentType: false,
         }).done(() => {
-            console.log('Success');
+            console.log('Success Blob');
         }).fail(() => {
-            console.log('Error');
+            console.log('Error Blob');
         });
-    });
+    }, 'image/jpeg');
 });
